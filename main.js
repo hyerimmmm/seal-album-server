@@ -93,50 +93,72 @@ app.post("/login", (req, res) => {
           msg: "서버에러",
         });
         return;
-      }
-      // JSON.stringify(result.rows[0].email) !== JSON.stringify(users[0]);
-      if (result.rows.length < 1) {
-        console.log("없는 이메일");
-        res.status(200).json({
-          state: true,
-          msg: "없는 이메일입니다",
-        });
-      } else if (
-        JSON.stringify(result.rows[0].email) === JSON.stringify(users[0])
-      ) {
-        console.log("존재하는 이메일");
-        client.query(
-          "SELECT * FROM users WHERE password = $1",
-          [users[1]],
-          (err, row) => {
+      } else {
+        if (result.rows.length < 1) {
+          console.log("없는 이메일");
+          res.status(200).json({
+            state: true,
+            msg: "없는 이메일입니다",
+          });
+        } else if (
+          JSON.stringify(result.rows[0].email) === JSON.stringify(users[0])
+        ) {
+          console.log("존재하는 이메일");
+
+          console.log(users[1]);
+          const password = result.rows[0].password;
+          console.log(password);
+          bcrypt.compare(users[1], password, (err, result) => {
             if (err) {
-              console.log("서버에러");
-              res.status(500).json({
-                state: false,
-                msg: "서버에러",
-              });
+              console.log(err);
               return;
-            } else if (row.rows.length < 1) {
-              console.log("존재하지 않는 비밀번호");
-            } else {
-              bcrypt.compare(
-                `` + users[1],
-                JSON.stringify(row.rows),
-                (err, result) => {
-                  if (err) {
-                    console.log(err);
-                  } else {
-                    console.log("비밀번호 일치");
-                    res.status(200).json({
-                      state: true,
-                      msg: "로그인 성공",
-                    });
-                  }
-                }
-              );
             }
-          }
-        );
+            console.log(result);
+            if (result) {
+              console.log("로그인 성공");
+              res.status(200).json({
+                state: true,
+                msg: "로그인 성공",
+              });
+            } else {
+              console.log("로그인 실패");
+              res.status(200).json({
+                state: false,
+                msg: "로그인 실패",
+              });
+            }
+          });
+          // client.query(
+          //   "SELECT * FROM users WHERE password = $1",
+          //   [users[1]],
+          //   (err, row) => {
+          //     if (err) {
+          //       console.log("서버에러");
+          //       res.status(500).json({
+          //         state: false,
+          //         msg: "서버에러",
+          //       });
+          //       return;
+          //     } else {
+          //       bcrypt.compare(
+          //         `` + users[1],
+          //         JSON.stringify(row.rows),
+          //         (err, result) => {
+          //           if (err) {
+          //             console.log(err);
+          //           } else {
+          //             console.log("비밀번호 일치");
+          //             res.status(200).json({
+          //               state: true,
+          //               msg: "로그인 성공",
+          //             });
+          //           }
+          //         }
+          //       );
+          //     }
+          //   }
+          // );
+        }
       }
       //  else {
       //   console.log("비밀번호 에러");
